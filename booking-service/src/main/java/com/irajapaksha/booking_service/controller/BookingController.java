@@ -1,14 +1,14 @@
 package com.irajapaksha.booking_service.controller;
 
+import com.irajapaksha.booking_service.dto.AvailabilityResponseDto;
 import com.irajapaksha.booking_service.dto.CreateBookingRequestDto;
 import com.irajapaksha.booking_service.dto.CreateBookingResponseDto;
 import com.irajapaksha.booking_service.service.BookingService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/bookings")
@@ -32,4 +32,13 @@ public class BookingController {
             return ResponseEntity.status(500).body(new CreateBookingResponseDto(null, "ERROR"));
         }
     }
+
+    @GetMapping("/availability")
+    public AvailabilityResponseDto checkAvailability(
+            @RequestParam String roomId,
+            @RequestParam String date
+    ) {
+        return svc.checkAvailability(roomId, date);
+    }
+
 }

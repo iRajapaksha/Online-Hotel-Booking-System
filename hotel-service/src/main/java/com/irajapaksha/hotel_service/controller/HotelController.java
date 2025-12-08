@@ -2,6 +2,7 @@ package com.irajapaksha.hotel_service.controller;
 
 import com.irajapaksha.hotel_service.Dto.HotelRequestDto;
 import com.irajapaksha.hotel_service.Dto.HotelResponseDto;
+import com.irajapaksha.hotel_service.Dto.RoomResponseDto;
 import com.irajapaksha.hotel_service.Dto.UploadUrl;
 import com.irajapaksha.hotel_service.model.Hotel;
 import com.irajapaksha.hotel_service.service.HotelService;
@@ -53,6 +54,17 @@ public class HotelController {
                         "Presigned URLs generated successfully",
                         service.generateUrls(fileNames)
                 )
+        );
+    }
+
+    //get all rooms available for a date range
+    @GetMapping("/rooms/available")
+    public ResponseEntity<ApiResponse<List<RoomResponseDto>>> getAvailableRooms(
+            @RequestParam String date
+            ) {
+        List<RoomResponseDto> rooms = service.getRoomsWithAvailability(date);
+        return ResponseEntity.ok(
+                ApiResponse.success("Available rooms retrieved successfully", rooms)
         );
     }
 }

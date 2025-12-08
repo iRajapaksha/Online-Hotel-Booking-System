@@ -1,5 +1,6 @@
 package com.irajapaksha.booking_service.service;
 
+import com.irajapaksha.booking_service.dto.AvailabilityResponseDto;
 import com.irajapaksha.booking_service.dto.CreateBookingRequestDto;
 import com.irajapaksha.booking_service.model.BookingItem;
 import com.irajapaksha.booking_service.util.DateRangeUtil;
@@ -184,5 +185,25 @@ public class BookingService {
 
         // Return booking ID
         return bookingId;
+    }
+
+    public AvailabilityResponseDto checkAvailability(String roomId, String date) {
+        String pk = "LOCK#" + roomId + "#" + date;
+
+        GetItemRequest req = GetItemRequest.builder()
+                .tableName(locksTable)
+                .key(Map.of(
+                        "pk", AttributeValue.builder().s(pk).build(),
+                        "sk", AttributeValue.builder().s("LOCK").build()
+                ))
+                .build();
+
+        GetItemResponse resp = ddb.getItem(req);
+
+        return new AvailabilityResponseDto(
+                roomId,
+                !resp.hasItem(),
+                date
+        );
     }
 }

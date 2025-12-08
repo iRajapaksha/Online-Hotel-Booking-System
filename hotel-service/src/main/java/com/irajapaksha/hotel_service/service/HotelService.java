@@ -3,13 +3,20 @@ package com.irajapaksha.hotel_service.service;
 
 import com.irajapaksha.hotel_service.Dto.HotelRequestDto;
 import com.irajapaksha.hotel_service.Dto.HotelResponseDto;
+import com.irajapaksha.hotel_service.Dto.RoomResponseDto;
 import com.irajapaksha.hotel_service.Dto.UploadUrl;
 import com.irajapaksha.hotel_service.model.Hotel;
+import com.irajapaksha.hotel_service.model.Room;
 import com.irajapaksha.hotel_service.repository.HotelRepository;
+import com.irajapaksha.hotel_service.repository.RoomRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -17,6 +24,9 @@ public class HotelService {
 
     private final HotelRepository repo;
     private final S3Service s3Service;
+    private final RestTemplate restTemplate;
+    private final RoomRepository roomRepository;
+    private final String bookingServiceUrl = "http://booking-service/bookings";
 
     public HotelResponseDto addHotel(HotelRequestDto req) {
         Hotel hotel = Hotel.builder()
@@ -51,6 +61,29 @@ public class HotelService {
         }).toList();
 
     }
+    public Boolean isRoomAvailable(Long roomId, String date) {
+        String url = bookingServiceUrl + "/availability?roomId=" + roomId + "&date=" + date;
+
+        Map response = restTemplate.getForObject(url, Map.class);
+        return (Boolean) response.get("isAvailable");
+    }
+    public List<RoomResponseDto> getRoomsWithAvailability(String date) {
+        List<Room> rooms = roomRepository.findAll();
+
+        return rooms.stream().map(room -> {
+            boolean isAvailable = isRoomAvailable(room.getId(), date);
+            return new RoomResponseDto(
+                    room.getId(),
+                    room.getRoomType(),
+                    room.getPrice(),
+                    room.getMaxGuests(),
+                    isAvailable,
+                    room.getHotelId()
+            );
+        }).collect(Collectors.toList());
+    }
+
+
 
     public HotelResponseDto mapToDto(Hotel hotel) {
         return HotelResponseDto.builder()
@@ -62,7 +95,6 @@ public class HotelService {
                 .images(hotel.getImages())
                 .build();
     }
-
 
 
 }

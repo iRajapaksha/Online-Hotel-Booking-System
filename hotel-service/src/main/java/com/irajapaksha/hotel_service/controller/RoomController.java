@@ -45,4 +45,16 @@ public class RoomController {
                 ApiResponse.success("Room availability updated successfully", room)
         );
     }
+
+    @GetMapping("/rooms/{id}")
+    public ResponseEntity<ApiResponse<RoomResponseDto>> getRoomById(
+            @PathVariable Long id) {
+        RoomResponseDto room = service.getRoomById(id);
+        return ResponseEntity.ok(
+                ApiResponse.success("Room retrieved successfully", room)
+        );
+    }
+
+
+
 }

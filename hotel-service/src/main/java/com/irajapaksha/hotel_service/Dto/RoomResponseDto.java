@@ -15,5 +15,4 @@ public class RoomResponseDto {
     private Integer maxGuests;
     private Boolean isAvailable;
     private Long hotelId;
-
 }

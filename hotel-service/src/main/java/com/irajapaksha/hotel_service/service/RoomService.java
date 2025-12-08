@@ -56,4 +56,10 @@ public class RoomService {
         List<Room> rooms = repo.findByHotelId(id);
         return rooms.stream().map(this::mapToDto).toList();
     }
+
+    public RoomResponseDto getRoomById(Long id) {
+        Room room = repo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Room not found with id: " + id));
+        return mapToDto(room);
+    }
 }
