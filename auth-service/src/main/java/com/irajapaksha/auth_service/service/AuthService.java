@@ -3,7 +3,10 @@ package com.irajapaksha.auth_service.service;
 import com.irajapaksha.auth_service.dto.*;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.*;
@@ -68,8 +71,9 @@ public class AuthService {
         cognitoClient.adminAddUserToGroup(addToGroup);
 
         return new SignUpResponseDto(
-                request.getEmail(),
-                request.getRole()
+                request.getRole(),
+                request.getEmail()
+
         );
     }
 
@@ -106,6 +110,7 @@ public class AuthService {
                 .build();
 
         cognitoClient.confirmSignUp(request);
+
 
         return "Account confirmed successfully!";
     }
