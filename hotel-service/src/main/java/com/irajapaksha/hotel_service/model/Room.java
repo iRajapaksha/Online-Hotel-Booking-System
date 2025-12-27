@@ -15,11 +15,12 @@ public class Room {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
+    private String roomName;
+    private String hotelName;
     private String roomType;
-    private Double price;
-    private Integer maxGuests;
-    private Boolean isAvailable = true;
+    private Double pricePerNight;
+    private Integer capacity;
+    private RoomStatus status;
     private Long hotelId;
 
 }

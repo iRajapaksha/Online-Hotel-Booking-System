@@ -11,12 +11,15 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.time.Duration;
 
 @Service
 
 public class S3Service {
-
+    @Value("${aws.region}")
+    private String region;
     private final S3Presigner presigner;
     private final String bucket;
 
@@ -34,7 +37,6 @@ public class S3Service {
         PutObjectRequest objectRequest = PutObjectRequest.builder()
                 .bucket(bucket)
                 .key(key)
-                .acl(ObjectCannedACL.PUBLIC_READ)
                 .build();
 
         PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
@@ -47,8 +49,13 @@ public class S3Service {
     }
 
 
-    // Build the public URL for accessing the object
-//    public String buildPublicUrl(String key) {
-//        return String.format("https://%s.s3.%s.amazonaws.com/%s", bucket, s3Client.region().id(), key);
-//    }
+
+    public String buildPublicUrl(String key) {
+        try {
+            String encodedKey = URLEncoder.encode(key, "UTF-8");
+            return String.format("https://%s.s3.%s.amazonaws.com/%s", bucket, region, encodedKey);
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException("Error encoding S3 key", e);
+        }
+    }
 }

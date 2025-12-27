@@ -3,6 +3,7 @@ package com.irajapaksha.hotel_service.controller;
 
 import com.irajapaksha.hotel_service.Dto.RoomRequestDto;
 import com.irajapaksha.hotel_service.Dto.RoomResponseDto;
+import com.irajapaksha.hotel_service.model.RoomStatus;
 import com.irajapaksha.hotel_service.service.RoomService;
 import com.online_hotel_booking_system.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -39,8 +40,8 @@ public class RoomController {
     @PutMapping("/rooms/{id}/availability")
     public ResponseEntity<ApiResponse<RoomResponseDto>> updateAvailability(
             @PathVariable Long id,
-            @RequestParam boolean available) {
-        RoomResponseDto room = service.updateAvailability(id, available);
+            @RequestBody RoomStatus status) {
+        RoomResponseDto room = service.updateAvailability(id, status);
         return ResponseEntity.ok(
                 ApiResponse.success("Room availability updated successfully", room)
         );
@@ -52,6 +53,36 @@ public class RoomController {
         RoomResponseDto room = service.getRoomById(id);
         return ResponseEntity.ok(
                 ApiResponse.success("Room retrieved successfully", room)
+        );
+    }
+
+    //get all rooms
+    @GetMapping("/hotels/rooms/all")
+    public ResponseEntity<ApiResponse<List<RoomResponseDto>>> getAllRooms() {
+        List<RoomResponseDto> rooms = service.getAllRooms();
+        return ResponseEntity.ok(
+                ApiResponse.success("All rooms retrieved successfully", rooms)
+        );
+    }
+
+    //delete a room
+    @DeleteMapping("/hotels/rooms/{id}")
+    public ResponseEntity<ApiResponse<String>> deleteRoom(
+            @PathVariable Long id) {
+        service.deleteRoom(id);
+        return ResponseEntity.ok(
+                ApiResponse.success("Room deleted successfully", "Room with id " + id + " deleted")
+        );
+    }
+
+    //update a room
+    @PatchMapping("/hotels/rooms/{id}")
+    public ResponseEntity<ApiResponse<RoomResponseDto>> updateRoom(
+            @PathVariable Long id,
+            @RequestBody RoomRequestDto req) {
+        RoomResponseDto room = service.updateRoom(id, req);
+        return ResponseEntity.ok(
+                ApiResponse.success("Room updated successfully", room)
         );
     }
 

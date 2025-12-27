@@ -7,6 +7,7 @@ import com.irajapaksha.hotel_service.Dto.RoomResponseDto;
 import com.irajapaksha.hotel_service.Dto.UploadUrl;
 import com.irajapaksha.hotel_service.model.Hotel;
 import com.irajapaksha.hotel_service.model.Room;
+import com.irajapaksha.hotel_service.model.RoomStatus;
 import com.irajapaksha.hotel_service.repository.HotelRepository;
 import com.irajapaksha.hotel_service.repository.RoomRepository;
 import lombok.AllArgsConstructor;
@@ -57,7 +58,8 @@ public class HotelService {
         return fileNames.stream().map(fileName -> {
             fileName = System.currentTimeMillis() + "_" + fileName;
             String url = s3Service.generatePresignedPutUrl(fileName, 3000);
-            return new UploadUrl(fileName, url);
+            String publicUrl = s3Service.buildPublicUrl(fileName);
+            return new UploadUrl(fileName, url, publicUrl);
         }).toList();
 
     }
@@ -72,15 +74,26 @@ public class HotelService {
 
         return rooms.stream().map(room -> {
             boolean isAvailable = isRoomAvailable(room.getId(), date);
-            return new RoomResponseDto(
-                    room.getId(),
-                    room.getRoomType(),
-                    room.getPrice(),
-                    room.getMaxGuests(),
-                    isAvailable,
-                    room.getHotelId()
-            );
+            if (isAvailable) {
+                room.setStatus(RoomStatus.AVAILABLE);
+            } else {
+                room.setStatus(RoomStatus.OCCUPIED);
+            }
+            return mapToDto(room);
+
         }).collect(Collectors.toList());
+    }
+
+    public RoomResponseDto mapToDto(Room room) {
+        return RoomResponseDto.builder()
+                .roomId(room.getId())
+                .roomType(room.getRoomType())
+                .roomName(room.getRoomName())
+                .pricePerNight(room.getPricePerNight())
+                .capacity(room.getCapacity())
+                .hotelId(room.getHotelId())
+                .status(room.getStatus())
+                .build();
     }
 
 
@@ -97,4 +110,21 @@ public class HotelService {
     }
 
 
+    public HotelResponseDto updateHotel(HotelRequestDto req, Long id) {
+        Hotel existingHotel = repo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Hotel not found with id: " + id));
+
+        if (req.getName() != null) existingHotel.setName(req.getName());
+        if (req.getLocation() != null) existingHotel.setLocation(req.getLocation());
+        if (req.getDescription() != null) existingHotel.setDescription(req.getDescription());
+        if (req.getRating() != null) existingHotel.setRating(req.getRating());
+        if (req.getImages() != null) existingHotel.setImages(req.getImages());
+
+        Hotel updatedHotel = repo.save(existingHotel);
+        return mapToDto(updatedHotel);
+    }
+
+    public void deleteHotel(Long id) {
+        repo.deleteById(id);
+    }
 }

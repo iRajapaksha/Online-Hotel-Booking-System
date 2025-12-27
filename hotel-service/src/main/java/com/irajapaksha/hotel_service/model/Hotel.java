@@ -23,6 +23,7 @@ public class Hotel {
     private String description;
     private Double rating;
     @ElementCollection
+    @Column(columnDefinition = "TEXT")
     private List<String> images;
 
 }

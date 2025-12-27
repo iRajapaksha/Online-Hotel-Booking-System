@@ -1,5 +1,6 @@
 package com.irajapaksha.hotel_service.Dto;
 
+import com.irajapaksha.hotel_service.model.RoomStatus;
 import lombok.*;
 
 @Getter
@@ -8,8 +9,11 @@ import lombok.*;
 @NoArgsConstructor
 @Builder
 public class RoomRequestDto {
+    private String roomName;
+    private String hotelName;
     private String roomType;
-    private Double price;
-    private Integer maxGuests;
+    private Double pricePerNight;
+    private Integer capacity;
+    private RoomStatus status;
 
 }

@@ -29,6 +29,15 @@ public class HotelController {
                 .body(ApiResponse.success("Hotel added successfully", response));
     }
 
+    @PatchMapping("/{id}")
+    public ResponseEntity<ApiResponse<HotelResponseDto>> updateHotel(
+            @RequestBody HotelRequestDto req,
+            @PathVariable Long id) {
+        HotelResponseDto response = service.updateHotel(req,id);
+        return ResponseEntity
+                .ok(ApiResponse.success("Hotel updated successfully", response));
+    }
+
     @GetMapping
     public ResponseEntity<ApiResponse<List<HotelResponseDto>>> getAll() {
         List<HotelResponseDto> hotels = service.getAll();
@@ -43,6 +52,15 @@ public class HotelController {
         HotelResponseDto hotel = service.getById(id);
         return ResponseEntity.ok(
                 ApiResponse.success("Hotel retrieved successfully", hotel)
+        );
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<String>> deleteHotel(
+            @PathVariable Long id) {
+        service.deleteHotel(id);
+        return ResponseEntity.ok(
+                ApiResponse.success("Hotel deleted successfully", "Hotel with id " + id + " has been deleted.")
         );
     }
 
