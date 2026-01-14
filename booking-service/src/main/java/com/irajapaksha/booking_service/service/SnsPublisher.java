@@ -1,6 +1,7 @@
 package com.irajapaksha.booking_service.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.online_hotel_booking_system.event.BookingCreatedEvent;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.sns.SnsClient;
@@ -21,6 +22,7 @@ public class SnsPublisher {
 
     public void publishBookingCreated(Object payload) {
         try {
+            System.out.println("Publishing to SNS topic: " + topicArn);
             String json = mapper.writeValueAsString(payload);
             PublishRequest req = PublishRequest.builder()
                     .topicArn(topicArn)

@@ -1,9 +1,11 @@
 package com.irajapaksha.booking_service.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.irajapaksha.booking_service.dto.AvailabilityResponseDto;
 import com.irajapaksha.booking_service.dto.CreateBookingRequestDto;
 import com.irajapaksha.booking_service.model.BookingItem;
 import com.irajapaksha.booking_service.util.DateRangeUtil;
+import com.online_hotel_booking_system.event.BookingCreatedEvent;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -171,6 +173,7 @@ public class BookingService {
         }
 
         // 6) Publish SNS event (non-blocking best-effort)
+
         Map<String, Object> event = Map.of(
                 "eventType", "booking_created",
                 "bookingId", bookingId,
@@ -179,9 +182,11 @@ public class BookingService {
                 "roomId", booking.roomId,
                 "checkInDate", booking.checkInDate,
                 "checkOutDate", booking.checkOutDate,
-                "createdAt", booking.createdAt.toString()
-        );
+                "createdAt", booking.createdAt.toString() );
         snsPublisher.publishBookingCreated(event);
+
+
+
 
         // Return booking ID
         return bookingId;
