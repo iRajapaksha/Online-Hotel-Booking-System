@@ -8,6 +8,12 @@ env:
     IMAGE_TAG: $CODEBUILD_RESOLVED_SOURCE_VERSION
 
 phases:
+  install:
+    runtime-versions:
+      java: corretto21
+    commands:
+      - echo "Using Java version:"
+      - java -version
   pre_build:
     commands:
       # Login to ECR
