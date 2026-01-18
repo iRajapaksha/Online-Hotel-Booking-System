@@ -30,6 +30,8 @@ phases:
 
   build:
     commands:
+      - IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9._-' '-')
+
       - cd shared-module
       - mvn clean install
       - cd ..
