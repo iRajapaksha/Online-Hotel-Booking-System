@@ -14,13 +14,13 @@ phases:
       - aws ecr get-login-password --region $AWS_REGION |
         docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
 
-      # Install kubectl
-      - curl -o kubectl https://amazon-eks.s3.ap-south-1.amazonaws.com/1.29.0/2024-01-04/bin/linux/amd64/kubectl
-      - chmod +x kubectl
-      - mv kubectl /usr/local/bin/
-
-      # Configure kubectl
-      - aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
+#      # Install kubectl
+#      - curl -o kubectl https://amazon-eks.s3.ap-south-1.amazonaws.com/1.29.0/2024-01-04/bin/linux/amd64/kubectl
+#      - chmod +x kubectl
+#      - mv kubectl /usr/local/bin/
+#
+#      # Configure kubectl
+#      - aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
 
   build:
     commands:
@@ -33,7 +33,7 @@ phases:
       - mvn clean compile jib:build -Dimage=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/user-service:$IMAGE_TAG
       - cd ..
 
-      - cd hotel-service
+      - cd hotel_service
       - mvn clean compile jib:build -Dimage=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/hotel-service:$IMAGE_TAG
       - cd ..
 
@@ -41,12 +41,12 @@ phases:
       - mvn clean compile jib:build -Dimage=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/booking-service:$IMAGE_TAG
       - cd ..
 
-  post_build:
-    commands:
-      # Replace IMAGE_TAG and deploy
-      - sed -i "s/IMAGE_TAG/$IMAGE_TAG/g" k8s/*.yaml
-      - kubectl apply -f k8s/
-      - kubectl rollout status deployment/auth-service
-      - kubectl rollout status deployment/user-service
-      - kubectl rollout status deployment/hotel-service
-      - kubectl rollout status deployment/booking-service
+#  post_build:
+#    commands:
+#      # Replace IMAGE_TAG and deploy
+#      - sed -i "s/IMAGE_TAG/$IMAGE_TAG/g" k8s/*.yaml
+#      - kubectl apply -f k8s/
+#      - kubectl rollout status deployment/auth-service
+#      - kubectl rollout status deployment/user-service
+#      - kubectl rollout status deployment/hotel-service
+#      - kubectl rollout status deployment/booking-service
