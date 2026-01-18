@@ -1,0 +1,13 @@
+package com.irajapaksha.hotel_service.repository;
+
+import com.irajapaksha.hotel_service.model.Room;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+
+public interface RoomRepository extends JpaRepository<Room, Long> {
+
+    List<Room> findByHotelId(Long hotelId);
+
+    List<Room> findByHotelIdInAndCapacityGreaterThanEqual(List<Long> hotelIds, Integer capacity);
+}

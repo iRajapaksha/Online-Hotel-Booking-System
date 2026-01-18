@@ -1,0 +1,52 @@
+version: 0.2
+
+env:
+  variables:
+    AWS_REGION: ap-south-1
+    ACCOUNT_ID: 147100277727
+    CLUSTER_NAME: stayescape-cluster
+    IMAGE_TAG: $CODEBUILD_RESOLVED_SOURCE_VERSION
+
+phases:
+  pre_build:
+    commands:
+      # Login to ECR
+      - aws ecr get-login-password --region $AWS_REGION |
+        docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+
+      # Install kubectl
+      - curl -o kubectl https://amazon-eks.s3.ap-south-1.amazonaws.com/1.29.0/2024-01-04/bin/linux/amd64/kubectl
+      - chmod +x kubectl
+      - mv kubectl /usr/local/bin/
+
+      # Configure kubectl
+      - aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
+
+  build:
+    commands:
+      # Build & push images (Jib)
+      - cd auth-service
+      - mvn clean compile jib:build -Dimage=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/auth-service:$IMAGE_TAG
+      - cd ..
+
+      - cd user-service
+      - mvn clean compile jib:build -Dimage=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/user-service:$IMAGE_TAG
+      - cd ..
+
+      - cd hotel-service
+      - mvn clean compile jib:build -Dimage=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/hotel-service:$IMAGE_TAG
+      - cd ..
+
+      - cd booking-service
+      - mvn clean compile jib:build -Dimage=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/booking-service:$IMAGE_TAG
+      - cd ..
+
+  post_build:
+    commands:
+      # Replace IMAGE_TAG and deploy
+      - sed -i "s/IMAGE_TAG/$IMAGE_TAG/g" k8s/*.yaml
+      - kubectl apply -f k8s/
+      - kubectl rollout status deployment/auth-service
+      - kubectl rollout status deployment/user-service
+      - kubectl rollout status deployment/hotel-service
+      - kubectl rollout status deployment/booking-service
