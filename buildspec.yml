@@ -24,9 +24,9 @@ phases:
 
   build:
     commands:
-      - mvn clean install -pl shared-module
-      - mvn clean compile jib:build \
-          -Dimage=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/auth-service:$IMAGE_TAG
+      - cd shared-module
+      - mvn clean install
+      - cd ..
       # Build & push images (Jib)
       - cd auth-service
       - mvn clean compile jib:build -Dimage=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/auth-service:$IMAGE_TAG
