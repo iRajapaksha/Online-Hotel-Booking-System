@@ -1,0 +1,34 @@
+version: 0.2
+
+env:
+  variables:
+    AWS_REGION: ap-south-1
+    CLUSTER_NAME: stayescape-cluster
+    ACCOUNT_ID: 147100277727
+
+phases:
+  install:
+    commands:
+      - echo "Installing kubectl"
+      - curl -o kubectl https://amazon-eks.s3.ap-south-1.amazonaws.com/1.29.0/2024-01-04/bin/windows/amd64/kubectl.exe
+      - chmod +x kubectl
+      - mv kubectl /usr/local/bin/
+  pre_build:
+    commands:
+      - echo "Updating kubeconfig"
+      - aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
+      - IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9._-' '-')
+  build:
+    commands:
+      - echo "Deploying images with tag $IMAGE_TAG"
+
+      - sed -i "s|auth-service:.*|auth-service:$IMAGE_TAG|g" k8s/auth-deployment.yaml
+      - sed -i "s|user-service:.*|user-service:$IMAGE_TAG|g" k8s/user-deployment.yaml
+      - sed -i "s|hotel-service:.*|hotel-service:$IMAGE_TAG|g" k8s/hotel-deployment.yaml
+      - sed -i "s|booking-service:.*|booking-service:$IMAGE_TAG|g" k8s/booking-deployment.yaml
+
+      - kubectl apply -f k8s/
+      - kubectl rollout status deployment/auth-service
+      - kubectl rollout status deployment/user-service
+      - kubectl rollout status deployment/hotel-service
+      - kubectl rollout status deployment/booking-service

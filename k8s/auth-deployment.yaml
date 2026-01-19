@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: auth-service
+  template:
+    metadata:
+      labels:
+        app: auth-service
+    spec:
+      containers:
+        - name: auth-service
+          image: 147100277727.dkr.ecr.ap-south-1.amazonaws.com/auth-service:0f21da87503c40a7035bffb5d4dfe24b5d3fef97-
+          ports:
+            - containerPort: 8081
+          envFrom:
+            - secretRef:
+                name: booking-service-secrets
