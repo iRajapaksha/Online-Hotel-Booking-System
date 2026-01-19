@@ -34,7 +34,27 @@ phases:
       - echo "Copying k8s manifests to EC2"
       - scp -o StrictHostKeyChecking=no -i key.pem -r k8s $EC2_USER@$EC2_HOST:~/k8s
 
-      - echo "Deploying to EC2 k3s cluster"
-      - ssh -o StrictHostKeyChecking=no -i key.pem $EC2_USER@$EC2_HOST "export KUBECONFIG=/etc/rancher/k3s/k3s.yaml && kubectl apply -f ~/k8s/ && kubectl rollout status deployment/auth-service && kubectl rollout status deployment/user-service && kubectl rollout status deployment/hotel-service && kubectl rollout status deployment/booking-service"
+      - echo "Deploying secrets first, then services"
+      - |
+        ssh -o StrictHostKeyChecking=no -i key.pem $EC2_USER@$EC2_HOST << 'EOF'
+        set -e
+        export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 
+        echo "Applying AWS SecretStore"
+        kubectl apply -f ~/k8s/aws-secretstore.yaml
 
+        echo "Applying ExternalSecrets"
+        kubectl apply -f ~/k8s/booking-external-secret.yaml
+
+        echo "Waiting for External Secrets to sync"
+        sleep 15
+
+        echo "Applying all application manifests"
+        kubectl apply -f ~/k8s/
+
+        echo "Waiting for deployments to roll out"
+        kubectl rollout status deployment/auth-service
+        kubectl rollout status deployment/user-service
+        kubectl rollout status deployment/hotel-service
+        kubectl rollout status deployment/booking-service
+        EOF
