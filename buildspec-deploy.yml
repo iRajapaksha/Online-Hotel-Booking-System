@@ -3,33 +3,43 @@ version: 0.2
 env:
   variables:
     AWS_REGION: ap-south-1
-    CLUSTER_NAME: stayescape-cluster
     ACCOUNT_ID: 147100277727
+    EC2_USER: ubuntu
+    EC2_HOST: 13.233.89.73
+    SSH_KEY_SECRET: stayescape-ec2-ssh-key
 
 phases:
   install:
     commands:
-      - echo "Installing kubectl (Linux amd64)"
-      - curl -LO "https://dl.k8s.io/release/$(curl -Ls https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-      - chmod +x kubectl
-      - mv kubectl /usr/local/bin/kubectl
-      - kubectl version --client
+      - echo "Installing tools"
+      - yum install -y openssh jq
+
   pre_build:
     commands:
-      - echo "Updating kubeconfig"
-      - aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
+      - echo "Fetching SSH key"
+      - aws secretsmanager get-secret-value \
+        --secret-id $SSH_KEY_SECRET \
+        --query SecretString \
+        --output text > key.pem
+      - chmod 600 key.pem
+
       - IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9._-' '-')
+
   build:
     commands:
-      - echo "Deploying images with tag $IMAGE_TAG"
-
+      - echo "Updating image tags"
       - sed -i "s|auth-service:.*|auth-service:$IMAGE_TAG|g" k8s/auth-deployment.yaml
       - sed -i "s|user-service:.*|user-service:$IMAGE_TAG|g" k8s/user-deployment.yaml
       - sed -i "s|hotel-service:.*|hotel-service:$IMAGE_TAG|g" k8s/hotel-deployment.yaml
       - sed -i "s|booking-service:.*|booking-service:$IMAGE_TAG|g" k8s/booking-deployment.yaml
 
-      - kubectl apply -f k8s/
-      - kubectl rollout status deployment/auth-service
-      - kubectl rollout status deployment/user-service
-      - kubectl rollout status deployment/hotel-service
-      - kubectl rollout status deployment/booking-service
+      - echo "Deploying to EC2 k3s cluster"
+      - |
+        ssh -o StrictHostKeyChecking=no -i key.pem $EC2_USER@$EC2_HOST << EOF
+          export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+          kubectl apply -f ~/k8s/
+          kubectl rollout status deployment/auth-service
+          kubectl rollout status deployment/user-service
+          kubectl rollout status deployment/hotel-service
+          kubectl rollout status deployment/booking-service
+        EOF
