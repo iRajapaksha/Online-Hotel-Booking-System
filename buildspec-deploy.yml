@@ -17,10 +17,8 @@ phases:
   pre_build:
     commands:
       - echo "Fetching SSH key"
-      - aws secretsmanager get-secret-value \
-        --secret-id $SSH_KEY_SECRET \
-        --query SecretString \
-        --output text > key.pem
+      - aws secretsmanager get-secret-value --secret-id $SSH_KEY_SECRET --query SecretString --output text > key.pem
+
       - chmod 600 key.pem
 
       - IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9._-' '-')
