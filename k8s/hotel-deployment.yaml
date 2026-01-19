@@ -12,6 +12,8 @@ spec:
       labels:
         app: hotel-service
     spec:
+      imagePullSecrets:
+        - name: ecr-pull-secret
       containers:
         - name: hotel-service
           image: 147100277727.dkr.ecr.ap-south-1.amazonaws.com/hotel-service:0f21da87503c40a7035bffb5d4dfe24b5d3fef97-
