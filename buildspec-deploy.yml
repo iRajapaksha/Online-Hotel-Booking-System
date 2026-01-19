@@ -12,59 +12,29 @@ phases:
   install:
     commands:
       - echo "Installing tools"
-      - yum install -y jq
-      - curl -fsSL https://get.docker.com | sh
-      - sudo usermod -aG docker $USER
-      - yum install -y kubectl
-      - amazon-linux-extras install -y amazon-linux-extras
+      - yum install -y openssh jq
 
   pre_build:
     commands:
-      - echo "Logging in to ECR"
-      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
       - echo "Fetching SSH key"
       - aws secretsmanager get-secret-value --secret-id $SSH_KEY_SECRET --query SecretString --output text > key.pem
+
       - chmod 600 key.pem
+
       - IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9._-' '-')
-      - echo "IMAGE_TAG=$IMAGE_TAG"
 
   build:
     commands:
-      - echo "Building Docker images"
-      - docker build -t auth-service ./auth
-      - docker build -t user-service ./user
-      - docker build -t hotel-service ./hotel
-      - docker build -t booking-service ./booking
-
-      - echo "Tagging Docker images for ECR"
-      - docker tag auth-service:latest $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/auth-service:$IMAGE_TAG
-      - docker tag user-service:latest $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/user-service:$IMAGE_TAG
-      - docker tag hotel-service:latest $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/hotel-service:$IMAGE_TAG
-      - docker tag booking-service:latest $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/booking-service:$IMAGE_TAG
-
-      - echo "Pushing Docker images to ECR"
-      - docker push $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/auth-service:$IMAGE_TAG
-      - docker push $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/user-service:$IMAGE_TAG
-      - docker push $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/hotel-service:$IMAGE_TAG
-      - docker push $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/booking-service:$IMAGE_TAG
-
-      - echo "Updating Kubernetes manifests with new image tags"
+      - echo "Updating image tags"
       - sed -i "s|auth-service:.*|auth-service:$IMAGE_TAG|g" k8s/auth-deployment.yaml
       - sed -i "s|user-service:.*|user-service:$IMAGE_TAG|g" k8s/user-deployment.yaml
       - sed -i "s|hotel-service:.*|hotel-service:$IMAGE_TAG|g" k8s/hotel-deployment.yaml
       - sed -i "s|booking-service:.*|booking-service:$IMAGE_TAG|g" k8s/booking-deployment.yaml
 
-  post_build:
-    commands:
       - echo "Copying k8s manifests to EC2"
       - scp -o StrictHostKeyChecking=no -i key.pem -r k8s $EC2_USER@$EC2_HOST:~/k8s
 
-      - echo "Deploying to k3s cluster"
-      - ssh -o StrictHostKeyChecking=no -i key.pem $EC2_USER@$EC2_HOST "
-        export KUBECONFIG=/etc/rancher/k3s/k3s.yaml &&
-        kubectl apply -f ~/k8s/ &&
-        kubectl rollout status deployment/auth-service &&
-        kubectl rollout status deployment/user-service &&
-        kubectl rollout status deployment/hotel-service &&
-        kubectl rollout status deployment/booking-service
-        "
+      - echo "Deploying to EC2 k3s cluster"
+      - ssh -o StrictHostKeyChecking=no -i key.pem $EC2_USER@$EC2_HOST "export KUBECONFIG=/etc/rancher/k3s/k3s.yaml && kubectl apply -f ~/k8s/ && kubectl rollout status deployment/auth-service && kubectl rollout status deployment/user-service && kubectl rollout status deployment/hotel-service && kubectl rollout status deployment/booking-service"
+
+
