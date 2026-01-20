@@ -1,6 +1,6 @@
 # 🏨 Online Hotel Booking System (Microservices on AWS)
 
-A cloud-native **online hotel booking system** built using **Spring Boot microservices**, **AWS-managed services**, **Docker**, **EKS**, and **CI/CD pipelines**. This project demonstrates real-world enterprise architecture with authentication, authorization, scalability, and automated deployments.
+A cloud-native **online hotel booking system** built using **Spring Boot microservices**, **AWS-managed services**, **Docker**, **Kubernetes**, and **CI/CD pipelines**. This project demonstrates real-world enterprise architecture with authentication, authorization, scalability, and automated deployments.
 
 ---
 
@@ -13,24 +13,10 @@ This system is designed as a **microservices-based architecture** to handle hote
 - Scalable microservices using **Spring Boot**
 - Containerized deployments using **Docker**
 - CI/CD using **AWS CodeBuild & CodePipeline**
-- Orchestration using **Amazon EKS (Kubernetes)**
+- Orchestration using **Amazon EC2 Self managed k8s**
 - Event-driven communication where applicable
 
 ---
-
-## 🧱 Microservices Architecture
-
-```
-Client (Web / Mobile)
-        |
-   AWS ALB (Ingress)
-        |
--------------------------------------------------
-|   Auth   |  User  |  Hotel  |  Booking Service |
--------------------------------------------------
-        |
-   AWS Managed Services (Cognito, RDS, SNS, etc.)
-```
 
 ### Services
 
@@ -61,31 +47,22 @@ Client (Web / Mobile)
 
 ## ☁️ AWS Services Used
 
-| Category | Service |
-|-------|--------|
-| Authentication | AWS Cognito |
-| Containers | Amazon ECR |
-| Orchestration | Amazon EKS |
+| Category | Service                |
+|-------|------------------------|
+| Authentication | AWS Cognito            |
+| Containers | Amazon ECR             |
+| Orchestration | Kubernetes             |
 | CI/CD | CodePipeline, CodeBuild |
-| Networking | ALB, VPC |
-| Database | Amazon RDS (PostgreSQL) |
-| Secrets | AWS Secrets Manager |
-| IAM | IAM Roles & Policies |
+| Database | Amazon RDS (PostgreSQL), DynamoDB |
+| Secrets | AWS Secrets Manager    |
+| IAM | IAM Roles & Policies   |
+ | Messaging | Amazon SNS/SQS         |
 
 ---
 
 ## 🐳 Docker & Containerization
 
-Each microservice is containerized using Docker.
-
-### Sample Dockerfile
-```dockerfile
-FROM eclipse-temurin:17-jdk-alpine
-WORKDIR /app
-COPY target/*.jar app.jar
-EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
-```
+Each microservice is containerized using google jib plugin.
 
 Docker images are pushed to **Amazon ECR**.
 
@@ -103,18 +80,16 @@ CodeBuild
   ↓
 Amazon ECR
   ↓
-Amazon EKS
+Amazon EC2
 ```
 
 ### Steps
 1. Code pushed to GitHub
 2. CodePipeline triggers
 3. CodeBuild:
-    - Builds JAR
     - Builds Docker image
     - Pushes image to ECR
 4. Kubernetes deployment updated
-5. EKS rolls out new version
 
 ---
 
@@ -144,7 +119,7 @@ phases:
 
 ---
 
-## ☸️ Kubernetes (EKS)
+## ☸️ Kubernetes 
 
 ### Deployment Example
 ```yaml
@@ -169,26 +144,12 @@ spec:
             - containerPort: 8080
 ```
 
-### Ingress (ALB)
-- AWS Load Balancer Controller
-- Path-based routing
-
----
 
 ## 🔑 Secrets & Configuration
 
 - Environment variables managed via:
     - AWS Secrets Manager
-    - Kubernetes Secrets
 - No secrets stored in GitHub
-
----
-
-## 📊 Observability (Optional Enhancements)
-
-- CloudWatch Logs
-- Prometheus + Grafana
-- AWS X-Ray for tracing
 
 ---
 
@@ -237,13 +198,3 @@ Computer Engineering Graduate
 Full Stack | Cloud | DevOps | AI Enthusiast
 
 ---
-
-## ⭐ Acknowledgments
-
-- AWS Documentation
-- Spring Boot Community
-- Kubernetes Official Docs
-
----
-
-> This project is designed to demonstrate **enterprise-level cloud-native architecture** and is suitable for portfolios, internships, and production-grade learning.
