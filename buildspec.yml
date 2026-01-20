@@ -51,7 +51,9 @@ phases:
       - cd booking-service
       - mvn clean compile jib:build -Dimage=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/booking-service:$IMAGE_TAG
       - cd ..
-
+artifacts:
+  files:
+    - image_tag.env
 #  post_build:
 #    commands:
 #      # Replace IMAGE_TAG and deploy

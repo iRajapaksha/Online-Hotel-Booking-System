@@ -16,6 +16,8 @@ phases:
 
   pre_build:
     commands:
+      - echo "Reading IMAGE_TAG from build artifact"
+      - source image_tag.env
       - echo "Fetching SSH key"
       - aws secretsmanager get-secret-value --secret-id $SSH_KEY_SECRET --query SecretString --output text > key.pem
 
@@ -27,9 +29,9 @@ phases:
     commands:
       - echo "Updating image tags"
       - sed -i "s|147100277727.dkr.ecr.ap-south-1.amazonaws.com/auth-service:.*|147100277727.dkr.ecr.ap-south-1.amazonaws.com/auth-service:$IMAGE_TAG|g" k8s/auth-deployment.yaml
-      - sed -i "s|147100277727.dkr.ecr.ap-south-1.amazonaws.com/user-service:.*|147100277727.dkr.ecr.ap-south-1.amazonaws.com/auth-service:$IMAGE_TAG|g" k8s/user-deployment.yaml
-      - sed -i "s|147100277727.dkr.ecr.ap-south-1.amazonaws.com/hotel-service:.*|147100277727.dkr.ecr.ap-south-1.amazonaws.com/auth-service:$IMAGE_TAG|g" k8s/hotel-deployment.yaml
-      - sed -i "s|147100277727.dkr.ecr.ap-south-1.amazonaws.com/booking-service:.*|147100277727.dkr.ecr.ap-south-1.amazonaws.com/auth-service:$IMAGE_TAG|g" k8s/booking-deployment.yaml
+      - sed -i "s|147100277727.dkr.ecr.ap-south-1.amazonaws.com/user-service:.*|147100277727.dkr.ecr.ap-south-1.amazonaws.com/user-service:$IMAGE_TAG|g" k8s/user-deployment.yaml
+      - sed -i "s|147100277727.dkr.ecr.ap-south-1.amazonaws.com/hotel-service:.*|147100277727.dkr.ecr.ap-south-1.amazonaws.com/hotel-service:$IMAGE_TAG|g" k8s/hotel-deployment.yaml
+      - sed -i "s|147100277727.dkr.ecr.ap-south-1.amazonaws.com/booking-service:.*|147100277727.dkr.ecr.ap-south-1.amazonaws.com/booking-service:$IMAGE_TAG|g" k8s/booking-deployment.yaml
 
       - echo "Copying k8s manifests to EC2"
       - scp -o StrictHostKeyChecking=no -i key.pem -r k8s $EC2_USER@$EC2_HOST:~/k8s
