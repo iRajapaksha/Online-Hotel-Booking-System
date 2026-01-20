@@ -35,5 +35,5 @@ phases:
       - scp -o StrictHostKeyChecking=no -i key.pem -r k8s $EC2_USER@$EC2_HOST:~/k8s
 
       - echo "Deploying secrets first, then services"
-      - ssh -o StrictHostKeyChecking=no -i key.pem $EC2_USER@$EC2_HOST "export KUBECONFIG=/etc/rancher/k3s/k3s.yaml && kubectl apply -f ~/k8s/aws-secretstore.yaml && kubectl apply -f ~/k8s/booking-external-secret.yaml && sleep 15 && kubectl apply -f ~/k8s/ && kubectl rollout status deployment/auth-service && kubectl rollout status deployment/user-service && kubectl rollout status deployment/hotel-service && kubectl rollout status deployment/booking-service"
+      - ssh -o StrictHostKeyChecking=no -i key.pem $EC2_USER@$EC2_HOST "export KUBECONFIG=/etc/rancher/k3s/k3s.yaml && kubectl apply -f ~/k8s/ && kubectl rollout status deployment/auth-service && kubectl rollout status deployment/user-service && kubectl rollout status deployment/hotel-service && kubectl rollout status deployment/booking-service"
 

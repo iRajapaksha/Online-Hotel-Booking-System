@@ -19,6 +19,3 @@ spec:
           image: 147100277727.dkr.ecr.ap-south-1.amazonaws.com/user-service:0f21da87503c40a7035bffb5d4dfe24b5d3fef97-
           ports:
             - containerPort: 8082
-          envFrom:
-            - secretRef:
-                name: booking-service-secrets
