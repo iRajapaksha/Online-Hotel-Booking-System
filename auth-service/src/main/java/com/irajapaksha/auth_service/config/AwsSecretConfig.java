@@ -48,8 +48,8 @@ public class AwsSecretConfig {
             this.cognitoJwkUrl = secrets.get("COGNITO_JWK_URL");
 
 
-            if (appClientId != null) System.setProperty("aws.cognito.userPoolId", appClientId);
-            if (userPoolId != null) System.setProperty("aws.cognito.appClientId", userPoolId);
+            if (appClientId != null) System.setProperty("aws.cognito.appClientId", appClientId);
+            if (userPoolId != null) System.setProperty("aws.cognito.userPoolId", userPoolId);
             if (clientSecret != null) System.setProperty("aws.cognito.clientSecret", clientSecret);
             if (cognitoJwkUrl != null) {
                 System.setProperty("aws.cognito.jwkUrl", cognitoJwkUrl);
