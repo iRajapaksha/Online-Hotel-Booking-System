@@ -1,12 +1,12 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: hotel-service
+  name: booking-service
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: hotel-service
+      app: booking-service
   template:
     metadata:
       labels:
