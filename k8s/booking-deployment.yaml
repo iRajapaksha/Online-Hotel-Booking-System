@@ -10,12 +10,12 @@ spec:
   template:
     metadata:
       labels:
-        app: hotel-service
+        app: booking-service
     spec:
       imagePullSecrets:
         - name: ecr-pull-secret
       containers:
-        - name: hotel-service
+        - name: booking-service
           image: 147100277727.dkr.ecr.ap-south-1.amazonaws.com/booking-service:0f21da87503c40a7035bffb5d4dfe24b5d3fef97-
           ports:
             - containerPort: 8085
