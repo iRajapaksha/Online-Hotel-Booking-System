@@ -10,32 +10,50 @@ env:
 
 phases:
   install:
+    runtime-versions:
+      java: corretto21
     commands:
       - echo "Installing tools"
       - yum install -y openssh jq
+      - echo "Using Java version:"
+      - java -version
 
   pre_build:
     commands:
-      - echo "Reading IMAGE_TAG from build artifact"
-      - source image_tag.env
+      - echo "Computing IMAGE_TAG from commit ID"
+      - IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9._-' '-')
+      - echo "IMAGE_TAG=$IMAGE_TAG"
+
+      - echo "Logging in to ECR"
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+
       - echo "Fetching SSH key"
       - aws secretsmanager get-secret-value --secret-id $SSH_KEY_SECRET --query SecretString --output text > key.pem
-
       - chmod 600 key.pem
-
-      - IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9._-' '-')
 
   build:
     commands:
-      - echo "Updating image tags"
+      - echo "Building shared module"
+      - cd shared-module
+      - mvn clean install
+      - cd ..
+
+      - echo "Building and pushing Docker images with Jib"
+      - for service in auth-service user-service hotel_service booking-service; do
+        echo "Building $service...";
+        cd $service;
+        mvn clean compile jib:build -Dimage=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$service:$IMAGE_TAG;
+        cd ..;
+        done
+
+      - echo "Updating Kubernetes manifests with IMAGE_TAG"
       - sed -i "s|147100277727.dkr.ecr.ap-south-1.amazonaws.com/auth-service:.*|147100277727.dkr.ecr.ap-south-1.amazonaws.com/auth-service:$IMAGE_TAG|g" k8s/auth-deployment.yaml
       - sed -i "s|147100277727.dkr.ecr.ap-south-1.amazonaws.com/user-service:.*|147100277727.dkr.ecr.ap-south-1.amazonaws.com/user-service:$IMAGE_TAG|g" k8s/user-deployment.yaml
       - sed -i "s|147100277727.dkr.ecr.ap-south-1.amazonaws.com/hotel-service:.*|147100277727.dkr.ecr.ap-south-1.amazonaws.com/hotel-service:$IMAGE_TAG|g" k8s/hotel-deployment.yaml
       - sed -i "s|147100277727.dkr.ecr.ap-south-1.amazonaws.com/booking-service:.*|147100277727.dkr.ecr.ap-south-1.amazonaws.com/booking-service:$IMAGE_TAG|g" k8s/booking-deployment.yaml
 
-      - echo "Copying k8s manifests to EC2"
+      - echo "Copying Kubernetes manifests to EC2"
       - scp -o StrictHostKeyChecking=no -i key.pem -r k8s $EC2_USER@$EC2_HOST:~/k8s
 
-      - echo "Deploying secrets first, then services"
+      - echo "Deploying to Kubernetes on EC2"
       - ssh -o StrictHostKeyChecking=no -i key.pem $EC2_USER@$EC2_HOST "export KUBECONFIG=/etc/rancher/k3s/k3s.yaml && kubectl apply -f ~/k8s/k8s && kubectl rollout status deployment/auth-service && kubectl rollout status deployment/user-service && kubectl rollout status deployment/hotel-service && kubectl rollout status deployment/booking-service"
-
