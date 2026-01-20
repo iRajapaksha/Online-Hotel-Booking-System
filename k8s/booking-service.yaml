@@ -9,4 +9,3 @@ spec:
     - port: 80
       targetPort: 8085
       nodePort: 30085
-  type: ClusterIP
